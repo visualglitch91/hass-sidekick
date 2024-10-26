@@ -351,12 +351,24 @@ export default class Sidekick {
   }
 
   syncStates(entityAId: string, entityBId: string) {
+    let locked = false;
+
     const onStateChange = ({ next }: { next: HassEntity }) => {
+      if (locked) {
+        return;
+      }
+
       if (this.state(entityAId) !== this.state(entityBId)) {
+        locked = true;
+
         this[next.state === "on" ? "turnOn" : "turnOff"]([
           entityAId,
           entityBId,
         ]);
+
+        setTimeout(() => {
+          locked = false;
+        }, 500);
       }
     };
 

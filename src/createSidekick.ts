@@ -49,27 +49,36 @@ export default async function createSidekick({
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  let running = false;
+  const waitForHomeAssistant = async () => {
+    let running = false;
 
-  while (!running) {
-    try {
-      console.log("Checking if Home Assistant is running...");
+    while (!running) {
+      try {
+        console.log("Checking if Home Assistant is running...");
 
-      const { state } = await api
-        .get("config", { timeout: 2000 })
-        .then((res) => res.json<any>());
+        const { state } = await api
+          .get("config", { timeout: 2000 })
+          .then((res) => res.json<any>());
 
-      if (state === "RUNNING") {
-        running = true;
+        if (state === "RUNNING") {
+          running = true;
+        }
+      } catch (err) {
+        await utils.sleep(1000);
       }
-    } catch (err) {
-      await utils.sleep(1000);
     }
-  }
+  };
+
+  await waitForHomeAssistant();
 
   const server = express();
   const auth = createLongLivedTokenAuth(host, token);
   const connection = await createConnection({ auth });
+
+  connection.addEventListener("disconnected", () => {
+    console.log("Disconnected");
+    connection.suspendReconnectUntil(waitForHomeAssistant());
+  });
 
   server.use(express.json());
 
