@@ -1,4 +1,3 @@
 export { default as createModule } from "./createModule";
-export { default as createSidekick } from "./createSidekick";
+export { default as Sidekick } from "./Sidekick";
 export * from "./utils";
-export type { default as Sidekick } from "./Sidekick";
