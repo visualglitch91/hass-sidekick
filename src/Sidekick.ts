@@ -10,7 +10,7 @@ import {
 import { cloneDeep, get, set } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 import { filter, map, Observable, Subject } from "rxjs";
-import ky, { KyInstance } from "ky";
+import axios, { AxiosInstance } from "axios";
 import express, { Express, Request } from "express";
 import { CronJob } from "cron";
 import PQueue from "p-queue";
@@ -53,11 +53,12 @@ function getModules(dir: string) {
 }
 
 export default class Sidekick {
+  private _haRunning = false;
   private _app: string;
   private _host: string;
   private _token: string;
   private _connection: Connection | null = null;
-  private _api: KyInstance;
+  private _api: AxiosInstance;
   private _server: Express;
   private _entities: HassEntities = {};
   private _managedEntityIds: string[] = [];
@@ -94,13 +95,17 @@ export default class Sidekick {
     this._server = express();
     this._server.use(express.json());
 
-    this._api = ky.create({
-      prefixUrl: `${host}/api`,
+    this._api = axios.create({
+      baseURL: `${host}/api`,
       headers: { Authorization: `Bearer ${token}` },
     });
 
     this._server.get("/", (_, res) => {
-      res.json({ message: "Sidekick is running!" });
+      if (this._haRunning) {
+        res.json({ message: "Sidekick is running" });
+      } else {
+        res.status(403).json({ message: "Sidekick is not running" });
+      }
     });
 
     this._server.listen(serverPort, "0.0.0.0", async () => {
@@ -110,7 +115,7 @@ export default class Sidekick {
 
       getModules(modulesDir).forEach((modulePath) => {
         import(modulePath).then((module) =>
-          module.default({ sidekick: this, ky, utils })
+          module.default({ sidekick: this, axios, utils })
         );
       });
 
@@ -142,22 +147,21 @@ export default class Sidekick {
     }
 
     const waitForHomeAssistant = async () => {
-      let running = false;
-
-      while (!running) {
+      while (!this._haRunning) {
         try {
           console.log("Checking if Home Assistant is running...");
 
           const { state } = await this._api
             .get("config", { timeout: 2000 })
-            .then((res) => res.json<any>());
+            .then((res) => res.data);
 
           if (state === "RUNNING") {
-            running = true;
+            this._haRunning = true;
+            break;
           }
-        } catch (err) {
-          await sleep(1000);
-        }
+        } catch (err) {}
+
+        await sleep(1000);
       }
     };
 
@@ -168,6 +172,7 @@ export default class Sidekick {
     this._connection = await createConnection({ auth });
 
     this._connection.addEventListener("disconnected", () => {
+      this._haRunning = false;
       console.log("Disconnected");
       this.getConnection().suspendReconnectUntil(waitForHomeAssistant());
     });
@@ -223,15 +228,26 @@ export default class Sidekick {
   }
 
   setEntityState(entityId: string, state: any) {
-    return this._api.post(`states/${entityId}`, {
-      json: { ...this._entities[entityId], state },
-    });
+    if (!this._haRunning) {
+      return Promise.resolve();
+    }
+
+    return this._api
+      .post(`states/${entityId}`, {
+        ...this._entities[entityId],
+        state,
+      })
+      .then(() => {});
   }
 
   setEntityAttribute(entityId: string, attribute: string, value: any) {
+    if (!this._haRunning) {
+      return Promise.resolve();
+    }
+
     const clone = cloneDeep(this._entities[entityId]);
     set(clone.attributes, attribute, value);
-    return this._api.post(`states/${entityId}`, { json: clone });
+    return this._api.post(`states/${entityId}`, clone).then(() => {});
   }
 
   service(domainAndService: string, data: any) {
