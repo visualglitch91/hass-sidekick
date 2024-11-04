@@ -8,6 +8,7 @@ import {
   createConnection,
 } from "home-assistant-js-websocket";
 import { cloneDeep, get, set } from "lodash";
+import cors from "cors";
 import { v4 as uuidv4 } from "uuid";
 import { filter, map, Observable, Subject } from "rxjs";
 import axios, { AxiosInstance } from "axios";
@@ -93,6 +94,7 @@ export default class Sidekick {
     this._token = token;
 
     this._server = express();
+    this._server.use(cors());
     this._server.use(express.json());
 
     this._api = axios.create({
