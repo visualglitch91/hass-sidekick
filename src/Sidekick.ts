@@ -229,6 +229,12 @@ export default class Sidekick {
     return this._entities;
   }
 
+  event(eventType: string, data: any) {
+    return this._api.post(`events/${eventType}`, {
+      json: data,
+    });
+  }
+
   setEntityState(entityId: string, state: any) {
     if (!this._haRunning) {
       return Promise.resolve();
