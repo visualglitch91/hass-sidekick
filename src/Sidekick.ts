@@ -42,7 +42,10 @@ function getModules(dir: string) {
 
         if (stat.isDirectory()) {
           return serviceFiles.concat(getFiles(fullPath));
-        } else {
+        } else if (
+          !file.startsWith("_") &&
+          (file.endsWith(".js") || file.endsWith(".ts"))
+        ) {
           serviceFiles.push(fullPath);
         }
 
