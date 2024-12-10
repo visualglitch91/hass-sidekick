@@ -233,9 +233,7 @@ export default class Sidekick {
   }
 
   event(eventType: string, data: any) {
-    return this._api.post(`events/${eventType}`, {
-      json: data,
-    });
+    return this._api.post(`events/${eventType}`, data);
   }
 
   setEntityState(entityId: string, state: any) {
