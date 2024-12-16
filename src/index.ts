@@ -19,7 +19,7 @@ export function createSidekickApp({
 }) {
   global.sk = createSidekick(config);
 
-  getModules(modulesDir).forEach((modulePath) => {
-    import(modulePath);
-  });
+  return Promise.all(
+    getModules(modulesDir).map((modulePath) => import(modulePath).then())
+  ).then(() => {});
 }
