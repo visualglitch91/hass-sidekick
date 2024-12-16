@@ -69,6 +69,7 @@ export function createSidekickBase({
   const express = createExpressApp({ namespace, port: server.port });
 
   return {
+    express,
     ...createPropsHelpers(() => entities),
     ...createAutomationHelpers({ express, allEvents$, updates$ }),
     ...createServiceHelpers(() => connection),
