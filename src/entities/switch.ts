@@ -1,4 +1,5 @@
 import { MqttClient } from "mqtt";
+import { handleAutoDiscovery } from "./utils";
 
 export interface SwitchConfig {
   mqttClient: MqttClient;
@@ -82,9 +83,11 @@ export function createSwitch({
     await publishState();
   })();
 
-  // Publish auto-discovery information
-  const publishAutoDiscovery = () => {
-    const discoveryPayload = {
+  handleAutoDiscovery({
+    mqttClient,
+    namespace,
+    domain: "switch",
+    config: {
       name,
       command_topic: commandTopic,
       state_topic: state_topic,
@@ -92,27 +95,8 @@ export function createSwitch({
       payload_off: payloadOff,
       unique_id: unique_id,
       device_class: "switch",
-    };
-
-    const discoveryTopic = `homeassistant/switch/${namespace}/${unique_id}/config`;
-
-    mqttClient.publish(
-      discoveryTopic,
-      JSON.stringify(discoveryPayload),
-      { retain: true },
-      (err) => {
-        if (err) {
-          console.error(
-            `Failed to publish auto-discovery payload to ${discoveryTopic}:`,
-            err
-          );
-        }
-      }
-    );
-  };
-
-  // Call the auto-discovery function
-  publishAutoDiscovery();
+    },
+  });
 
   return {
     toggle: async () => {

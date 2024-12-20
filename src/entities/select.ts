@@ -1,4 +1,5 @@
 import { MqttClient } from "mqtt";
+import { handleAutoDiscovery } from "./utils";
 
 export interface SelectConfig {
   mqttClient: MqttClient;
@@ -75,36 +76,19 @@ export function createSelect({
     await publishState();
   })();
 
-  // Publish auto-discovery information
-  const publishAutoDiscovery = () => {
-    const discoveryPayload = {
+  handleAutoDiscovery({
+    mqttClient,
+    namespace,
+    domain: "select",
+    config: {
       name,
       command_topic,
       state_topic,
       options,
       unique_id,
       platform: "select",
-    };
-
-    const discoveryTopic = `homeassistant/select/${namespace}/${unique_id}/config`;
-
-    mqttClient.publish(
-      discoveryTopic,
-      JSON.stringify(discoveryPayload),
-      { retain: true },
-      (err) => {
-        if (err) {
-          console.error(
-            `Failed to publish auto-discovery payload to ${discoveryTopic}:`,
-            err
-          );
-        }
-      }
-    );
-  };
-
-  // Call the auto-discovery function
-  publishAutoDiscovery();
+    },
+  });
 
   return {
     setOption: async (option: string) => {

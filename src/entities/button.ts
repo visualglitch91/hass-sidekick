@@ -1,4 +1,5 @@
 import { MqttClient } from "mqtt";
+import { handleAutoDiscovery } from "./utils";
 
 export interface ButtonConfig {
   mqttClient: MqttClient;
@@ -45,36 +46,17 @@ export function createButton({
     });
   };
 
-  // Publish auto-discovery information
-  const publishAutoDiscovery = () => {
-    const discoveryPayload = {
+  handleAutoDiscovery({
+    mqttClient,
+    namespace,
+    domain: "button",
+    config: {
       name,
       unique_id: unique_id,
       platform: "button",
       command_topic: commandTopic,
-    };
-
-    const discoveryTopic = `homeassistant/button/${namespace}/${unique_id}/config`;
-
-    mqttClient.publish(
-      discoveryTopic,
-      JSON.stringify(discoveryPayload),
-      { retain: true },
-      (err) => {
-        if (err) {
-          console.error(
-            `Failed to publish auto-discovery payload to ${discoveryTopic}:`,
-            err
-          );
-        } else {
-          console.log(`Published auto-discovery payload to ${discoveryTopic}`);
-        }
-      }
-    );
-  };
-
-  // Call the auto-discovery function
-  publishAutoDiscovery();
+    },
+  });
 
   return {
     press: handlePress,
