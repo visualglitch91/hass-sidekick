@@ -8,6 +8,7 @@ export function createPropsHelpers(getEntities: () => HassEntities) {
 
   return {
     entity,
+    getEntities,
     state: (id: string) => {
       return entity(id)?.state;
     },
