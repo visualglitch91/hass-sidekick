@@ -18,6 +18,7 @@ export function createEntitiesHelpers({
   const mqttClient = mqtt.connect(mqttUrl, authentication);
 
   return {
+    mqtt: mqttClient,
     create: {
       switch: (config: Omit<SwitchConfig, "mqttClient" | "namespace">) => {
         return createSwitch({ ...config, mqttClient, namespace });
