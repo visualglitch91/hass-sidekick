@@ -7,6 +7,11 @@ export interface BaseConfig {
   config: Record<string, any> & { unique_id: string };
 }
 
+export interface Device {
+  name: string;
+  id: string;
+}
+
 export function handleAutoDiscovery({
   mqttClient,
   namespace,

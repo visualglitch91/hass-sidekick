@@ -2,6 +2,7 @@ import mqtt from "mqtt";
 import { createSwitch, SwitchConfig } from "./switch";
 import { createButton, ButtonConfig } from "./button";
 import { createSelect, SelectConfig } from "./select";
+import { createNumber, NumberConfig } from "./number";
 
 export function createEntitiesHelpers({
   mqttUrl,
@@ -28,6 +29,9 @@ export function createEntitiesHelpers({
       },
       select: (config: Omit<SelectConfig, "mqttClient" | "namespace">) => {
         return createSelect({ ...config, mqttClient, namespace });
+      },
+      number: (config: Omit<NumberConfig, "mqttClient" | "namespace">) => {
+        return createNumber({ ...config, mqttClient, namespace });
       },
     },
   };
