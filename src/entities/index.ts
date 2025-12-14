@@ -3,6 +3,7 @@ import { createSwitch, SwitchConfig } from "./switch";
 import { createButton, ButtonConfig } from "./button";
 import { createSelect, SelectConfig } from "./select";
 import { createNumber, NumberConfig } from "./number";
+import { createBinarySensor, BinarySensorConfig } from "@visualglitch91/hass-sidekick/src/entities/binarySensor";
 
 export function createEntitiesHelpers({
   mqttUrl,
@@ -32,6 +33,9 @@ export function createEntitiesHelpers({
       },
       number: (config: Omit<NumberConfig, "mqttClient" | "namespace">) => {
         return createNumber({ ...config, mqttClient, namespace });
+      },
+      binarySensor: (config: Omit<BinarySensorConfig, "mqttClient" | "namespace">) => {
+        return createBinarySensor({ ...config, mqttClient, namespace });
       },
     },
   };
