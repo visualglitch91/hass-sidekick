@@ -85,5 +85,13 @@ export function createBinarySensor({
       currentValue = val;
       return val;
     },
+    forceUpdate: async () => {
+      try {
+        currentValue = await get_value();
+        await publishState();
+      } catch (err) {
+        console.error("Failed to force update sensor value:", err);
+      }
+    },
   };
 }

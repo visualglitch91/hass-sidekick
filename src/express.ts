@@ -17,9 +17,9 @@ export function createExpressApp({
     res.json({ message: `${namespace} is running` });
   });
 
-  app.listen(port, () => {
+  const server = app.listen(port, () => {
     console.log(`Listening on port ${port}`);
   });
 
-  return app;
+  return { ...app, server };
 }

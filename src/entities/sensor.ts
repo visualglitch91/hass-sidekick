@@ -1,7 +1,7 @@
 import { MqttClient } from "mqtt";
 import { Device, handleAutoDiscovery } from "./utils";
 
-export interface SensorConfig<T extends string|number> {
+export interface SensorConfig<T extends string | number> {
   mqttClient: MqttClient;
   namespace: string;
   get_value: () => T | Promise<T>;
@@ -14,7 +14,7 @@ export interface SensorConfig<T extends string|number> {
   name: string;
 }
 
-export function createSensor<T extends string|number>({
+export function createSensor<T extends string | number>({
   mqttClient,
   namespace,
   unique_id,
@@ -25,7 +25,7 @@ export function createSensor<T extends string|number>({
   state_class,
   device = undefined,
   interval = 5000,
-}:SensorConfig<T>) {
+}: SensorConfig<T>) {
   const state_topic = `${namespace}/sensor/${unique_id}/state`;
 
   let currentValue: T | null = null;
@@ -36,7 +36,7 @@ export function createSensor<T extends string|number>({
         state_topic,
         String(currentValue),
         { retain: true },
-        (err) => {
+        (err: any) => {
           if (err) {
             console.error(`Failed to publish state to ${state_topic}:`, err);
           }
@@ -88,6 +88,14 @@ export function createSensor<T extends string|number>({
       const val = await get_value();
       currentValue = val;
       return val;
+    },
+    forceUpdate: async () => {
+      try {
+        currentValue = await get_value();
+        await publishState();
+      } catch (err) {
+        console.error("Failed to force update sensor value:", err);
+      }
     },
   };
 }
